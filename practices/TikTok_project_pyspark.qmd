@@ -1,0 +1,35 @@
+---
+title: "Tik-Tok Project"
+format: html
+---
+# PACE
+```{python}
+from pyspark.sql import SparkSession
+```
+#
+```{python}
+spark=SparkSession.builder.appName("spark_app").getOrCreate()
+```
+#
+```{python}
+data=spark.read.csv("C:/Users/Udith P Kidiyoor/Downloads/tiktok_dataset.csv", header=True, inferSchema=True)
+data.show(20)
+```
+#
+```{python}
+data.printSchema()
+```
+#
+```{python}
+data.count(), len(data.columns)
+```
+#
+```{python}
+# select claim_status, count(claim_status) from data group by claim_status;
+from pyspark.sql.functions import count
+q1=data.select("claim_status").groupBy("claim_status").agg(count("claim_status").alias("Count"))
+q1.show()
+```
+
+
+
