@@ -1,0 +1,215 @@
+---
+title: "Tik-Tok Analysis Project"
+format: html
+---
+
+# PACE
+
+## Plan - Scope, goals and Objective of the project
+The purpose of this project is to conduct exploratory data analysis on a provided data set. Your mission is to continue the investigation you began in C1 and perform further EDA on this data with the aim of learning more about the variables. Of particular interest is information related to what distinguishes claim videos from opinion videos.
+
+The goal is to explore the dataset and create visualizations.
+```{python}
+import pandas as pd
+data=pd.read_csv("C:/Users/Udith P Kidiyoor/Downloads/tiktok_dataset.csv")
+data.head()
+```
+
+# Analyse - EDA
+```{python}
+data.info()
+```
+```{python}
+data.shape
+# (19382, 12)
+```
+## Data validation
+```{python}
+data.describe()
+```
+```{python}
+data.isna().sum()
+```
+```{python}
+mask=data.isna()
+```
+```{python}
+mask=mask.any(axis=1)
+```
+```{python}
+nulls=data[mask]
+```
+```{python}
+data=data.dropna()
+```
+# Construct - Subset of EDA
+### Create a boxplot to visualize distribution of `video_duration_sec`
+```{python}
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure(figsize=(12,6))
+sns.boxplot(data=data, x="video_duration_sec", color="pink")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+```
+### Create a histogram 
+```{python}
+plt.figure(figsize=(12,6))
+sns.histplot(data["video_duration_sec"], color="pink", kde=True)
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+```
+### Create a boxplot to visualize distribution of `video_view_count`
+```{python}
+plt.figure(figsize=(12,6))
+sns.boxplot(data=data, x="video_view_count", color="purple")
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+```
+### Creating a histogram
+```{python}
+plt.figure(figsize=(12,6))
+sns.histplot(data=data, x="video_view_count", color="purple", kde=True)
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+```
+```{python}
+numerical_features=[]
+for column, typ in data.dtypes.items():
+    if typ=="int64" or typ=="float64":
+        numerical_features.append(column)
+numerical_features
+```
+```{python}
+for i, column in enumerate(numerical_features):
+    plt.subplot(3,3,i+1)
+    sns.boxplot(data=data, x=column, color="skyblue")
+    plt.title(column)
+plt.tight_layout()
+plt.show()
+```
+```{python}
+for i, column in enumerate(numerical_features):
+    plt.subplot(3,3,i+1)
+    sns.histplot(data[column], color="pink", kde=True)
+    plt.title(column)
+plt.tight_layout()
+plt.show()
+```
+### Distribution of Claim Status by Author Ban Status
+```{python}
+sns.histplot(data=data, x="author_ban_status", hue="claim_status", multiple="dodge", shrink=0.8, kde=True)
+plt.tight_layout()
+plt.grid(True)
+plt.show()
+```
+```{python}
+q1=data.groupby("author_ban_status")["video_view_count"].median().reset_index() 
+q1
+```
+```{python}
+plt.figure(figsize=(10,5))
+sns.barplot(data=q1, x="author_ban_status", y="video_view_count")
+plt.tight_layout()
+plt.grid(True)
+plt.show()
+```
+### Calculating the median view count for claim status.
+```{python}
+q2=data.groupby("claim_status")["video_view_count"].median().reset_index() 
+q2
+```
+```{python}
+views_by_claim = (
+    data.groupby("claim_status")["video_view_count"]
+    .sum()
+)
+
+plt.figure(figsize=(10,5))
+
+plt.pie(
+    views_by_claim.values,
+    labels=views_by_claim.index,
+    autopct="%1.1f%%"
+)
+
+plt.title("Total Views by Claim Status")
+
+plt.show()
+```
+# Handling Outliers
+```{python}
+count_columns = [
+    "video_view_count",
+    "video_like_count",
+    "video_share_count",
+    "video_download_count",
+    "video_comment_count"
+]
+
+for column in count_columns:
+    
+    # Calculate Q1 and Q3
+    q1 = data[column].quantile(0.25)
+    q3 = data[column].quantile(0.75)
+    
+    # Calculate IQR
+    iqr = q3 - q1
+    
+    # Calculate median
+    median = data[column].median()
+    
+    # Calculate outlier threshold
+    threshold = median + (1.5 * iqr)
+    
+    # Count outliers
+    outlier_count = (data[column] > threshold).sum()
+    
+    # Print result
+    print(f"Number of outliers, {column}: {outlier_count}")
+```
+### Create a scatterplot of `video_view_count` versus `video_like_count`
+### according to `claim_status`
+```{python}
+plt.figure(figsize=(10,6))
+sns.scatterplot(
+    data=data,
+    x="video_view_count",
+    y="video_like_count",
+    hue="claim_status"
+)
+plt.title("Video Views vs Likes by Claim Status")
+plt.xlabel("Video View Count")
+plt.ylabel("Video Like Count")
+plt.tight_layout()
+plt.show()
+```
+### Create a scatterplot of `video_view_count` versus `video_like_count`
+### for opinions only
+```{python}
+opinions = data[data["claim_status"] == "opinion"]
+plt.figure(figsize=(10,6))
+sns.scatterplot(
+    data=opinions,
+    x="video_view_count",
+    y="video_like_count"
+)
+plt.title("Video Views vs Likes for Opinions")
+plt.xlabel("Video View Count")
+plt.ylabel("Video Like Count")
+plt.tight_layout()
+plt.show()
+```
+# Execute  
+There is a strong positive relationship between video_view_count and video_like_count. As views increase, likes also tend to increase.
+The data forms a triangular pattern, which suggests engagement varies widely for videos with similar view counts.
+The first scatterplot shows that claim videos generally reach much higher engagement levels compared to opinion videos.
+The second plot confirms that opinion videos have significantly lower ranges for both views and likes.
+The distribution is heavily right-skewed, with a small number of videos receiving extremely high engagement.
+
+
